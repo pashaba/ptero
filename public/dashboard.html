@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard — Pterodash</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand"><span class="dot"></span>Pterodash <small id="panelChip"></small></div>
+  <div class="topbar-right">
+    <span class="panel-chip" id="userChip">…</span>
+    <button class="btn btn-ghost" id="logoutBtn">Disconnect</button>
+  </div>
+</div>
+
+<div class="container">
+  <div class="page-head">
+    <div>
+      <h1>Servers</h1>
+      <p class="sub">Semua server yang bisa diakses dengan API key ini.</p>
+    </div>
+    <div class="field-inline" style="margin:0;">
+      <input id="search" type="text" placeholder="cari server…" style="min-width:220px;">
+    </div>
+  </div>
+
+  <div id="grid" class="server-grid"></div>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+requireAuth();
+
+document.getElementById('panelChip').textContent = Store.panel.replace(/^https?:\/\//, '');
+const user = Store.user;
+document.getElementById('userChip').textContent = user ? (user.username || user.email || 'connected') : 'connected';
+
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  Store.clear();
+  window.location.href = '/index.html';
+});
+
+let allServers = [];
+
+function statusClass(status) {
+  if (status === 'running') return 'status-running';
+  if (status === 'offline') return 'status-offline';
+  if (status === 'starting') return 'status-starting';
+  if (status === 'stopping') return 'status-stopping';
+  return 'status-error';
+}
+
+function render(list) {
+  const grid = document.getElementById('grid');
+  if (!list.length) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">Belum ada server, atau tidak ada yang cocok dengan pencarian.</div>`;
+    return;
+  }
+  grid.innerHTML = list.map(s => {
+    const a = s.attributes;
+    return `
+    <a class="server-card" href="/server.html?id=${a.identifier}">
+      <div class="row1">
+        <span class="status-dot ${a.is_suspended ? 'status-error' : 'status-offline'}"></span>
+        <span class="name">${escapeHtml(a.name)}</span>
+      </div>
+      <div class="node mono">${escapeHtml(a.node || 'node unknown')} · ${a.identifier}</div>
+      <div class="stats">
+        <span>MEM <b>${a.limits ? fmtBytes(a.limits.memory * 1024 * 1024) : '—'}</b></span>
+        <span>DISK <b>${a.limits ? fmtBytes(a.limits.disk * 1024 * 1024) : '—'}</b></span>
+        <span>CPU <b>${a.limits && a.limits.cpu ? a.limits.cpu + '%' : '∞'}</b></span>
+      </div>
+    </a>`;
+  }).join('');
+}
+
+async function load() {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">Memuat server…</div>`;
+  try {
+    const res = await Api.getServers();
+    allServers = res.data || [];
+    render(allServers);
+  } catch (err) {
+    if (err.status === 401 || err.status === 403) {
+      toast('Sesi tidak valid, silakan connect ulang.', 'err');
+      Store.clear();
+      setTimeout(() => window.location.href = '/index.html', 1200);
+      return;
+    }
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">Gagal memuat server: ${escapeHtml(err.message)}</div>`;
+  }
+}
+
+document.getElementById('search').addEventListener('input', (e) => {
+  const q = e.target.value.toLowerCase();
+  render(allServers.filter(s => s.attributes.name.toLowerCase().includes(q) || s.attributes.identifier.includes(q)));
+});
+
+load();
+</script>
+</body>
+</html>

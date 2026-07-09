@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Server — Pterodash</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand"><a href="/dashboard.html" style="display:flex;align-items:center;gap:10px;"><span class="dot"></span>Pterodash</a></div>
+  <div class="topbar-right">
+    <span class="panel-chip" id="userChip">…</span>
+    <button class="btn btn-ghost" onclick="window.location.href='/dashboard.html'">← Servers</button>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="server-head">
+    <h1><span class="status-dot status-offline" id="statusDot"></span><span id="serverName">Loading…</span> <span class="id-chip" id="idChip"></span></h1>
+    <div class="power-actions">
+      <button class="btn" id="btnStart">Start</button>
+      <button class="btn" id="btnRestart">Restart</button>
+      <button class="btn btn-danger" id="btnStop">Stop</button>
+      <button class="btn btn-danger" id="btnKill">Kill</button>
+    </div>
+  </div>
+
+  <div class="stat-row" id="statRow">
+    <div class="stat-box"><div class="label">Status</div><div class="value" id="statVal-status">—</div></div>
+    <div class="stat-box"><div class="label">CPU</div><div class="value" id="statVal-cpu">—</div></div>
+    <div class="stat-box"><div class="label">Memory</div><div class="value" id="statVal-mem">—</div></div>
+    <div class="stat-box"><div class="label">Disk</div><div class="value" id="statVal-disk">—</div></div>
+    <div class="stat-box"><div class="label">Uptime</div><div class="value" id="statVal-uptime">—</div></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="console">Console</button>
+    <button class="tab-btn" data-tab="files">Files</button>
+    <button class="tab-btn" data-tab="startup">Startup</button>
+    <button class="tab-btn" data-tab="network">Network</button>
+    <button class="tab-btn" data-tab="preview">Preview</button>
+  </div>
+
+  <!-- CONSOLE -->
+  <div class="tab-panel active" id="panel-console">
+    <div class="console-wrap">
+      <div class="console-output" id="consoleOutput">connecting to console…\n</div>
+      <div class="console-input-row">
+        <span>&gt;</span>
+        <input id="consoleInput" placeholder="ketik command lalu Enter…" autocomplete="off">
+      </div>
+    </div>
+  </div>
+
+  <!-- FILES -->
+  <div class="tab-panel" id="panel-files">
+    <div id="fileManagerRoot"></div>
+  </div>
+
+  <!-- STARTUP -->
+  <div class="tab-panel" id="panel-startup">
+    <div id="startupRoot"></div>
+  </div>
+
+  <!-- NETWORK -->
+  <div class="tab-panel" id="panel-network">
+    <div id="networkRoot"></div>
+  </div>
+
+  <!-- PREVIEW -->
+  <div class="tab-panel" id="panel-preview">
+    <div class="preview-tabs">
+      <button class="pill active" data-ptab="whatsapp">WhatsApp Bot</button>
+      <button class="pill" data-ptab="discord">Discord Bot</button>
+      <button class="pill" data-ptab="telegram">Telegram Bot</button>
+      <button class="pill" data-ptab="website">Website</button>
+    </div>
+    <div id="previewRoot"></div>
+  </div>
+
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/console.js"></script>
+<script src="/js/files.js"></script>
+<script src="/js/startup.js"></script>
+<script src="/js/network.js"></script>
+<script src="/js/preview.js"></script>
+<script src="/js/server.js"></script>
+</body>
+</html>

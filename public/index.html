@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pterodash — Connect to panel</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<div class="login-wrap">
+  <div class="login-card">
+    <div class="login-eyebrow">Pterodash / Control Room</div>
+    <h1>Connect your panel</h1>
+    <p class="sub">Masukkan URL panel Pterodactyl dan Client API key kamu. Untuk sekarang kredensial hanya disimpan di localStorage browser ini — belum dikirim ke server manapun.</p>
+
+    <div class="field">
+      <label>Panel URL</label>
+      <input id="panelUrl" type="text" placeholder="https://private.pterokudesu.web.id" autocomplete="off" spellcheck="false">
+    </div>
+
+    <div class="field">
+      <label>Client API Key</label>
+      <input id="apiKey" type="password" placeholder="ptlc_xxxxxxxxxxxxxxxxxxxxxxxx" autocomplete="off" spellcheck="false">
+      <div class="hint">Ambil dari panel: Account Settings → API Credentials → Create Client API Key. Ini beda dengan Application API key.</div>
+    </div>
+
+    <div class="login-actions">
+      <button class="btn btn-primary" id="connectBtn">Connect</button>
+    </div>
+
+    <div class="login-status" id="status"></div>
+
+    <div class="boot-log" id="bootLog"></div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+const panelInput = document.getElementById('panelUrl');
+const keyInput = document.getElementById('apiKey');
+const statusEl = document.getElementById('status');
+const bootLog = document.getElementById('bootLog');
+const connectBtn = document.getElementById('connectBtn');
+
+// prefill if already saved
+if (Store.panel) panelInput.value = Store.panel;
+if (Store.key) keyInput.value = Store.key;
+
+function log(msg, ok) {
+  const line = document.createElement('div');
+  line.innerHTML = ok ? `<span class="ok">✓</span> ${msg}` : msg;
+  bootLog.appendChild(line);
+}
+
+connectBtn.addEventListener('click', async () => {
+  const panel = panelInput.value.trim();
+  const key = keyInput.value.trim();
+  statusEl.className = 'login-status';
+  statusEl.textContent = '';
+  bootLog.innerHTML = '';
+
+  if (!panel || !key) {
+    statusEl.className = 'login-status error';
+    statusEl.textContent = 'Panel URL dan API key wajib diisi.';
+    return;
+  }
+
+  connectBtn.disabled = true;
+  connectBtn.textContent = 'Connecting…';
+
+  // temporarily store so Api.call can read them
+  Store.save(panel, key, null);
+
+  try {
+    log('resolving panel host…');
+    const account = await Api.getAccount();
+    log('authenticated as ' + (account.attributes ? account.attributes.username : 'user'), true);
+    log('fetching server list…');
+    const servers = await Api.getServers();
+    const count = servers.data ? servers.data.length : 0;
+    log(`found ${count} server${count === 1 ? '' : 's'}`, true);
+
+    Store.save(panel, key, account.attributes || null);
+    statusEl.className = 'login-status ok';
+    statusEl.textContent = 'Connected. Redirecting…';
+    setTimeout(() => { window.location.href = '/dashboard.html'; }, 500);
+  } catch (err) {
+    Store.clear();
+    statusEl.className = 'login-status error';
+    statusEl.textContent = err.message || 'Gagal connect ke panel.';
+    log('failed: ' + (err.message || 'unknown error'));
+    connectBtn.disabled = false;
+    connectBtn.textContent = 'Connect';
+  }
+});
+
+keyInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') connectBtn.click(); });
+</script>
+</body>
+</html>
